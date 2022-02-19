@@ -1,3 +1,7 @@
+locals {
+    azs = data.aws_availability_zones.available.names
+}
+
 data "aws_availability_zones" "available" {}
 
 resource "random_id" "random" {
@@ -54,14 +58,35 @@ resource "aws_default_route_table" "green_private_rt" {
 }
 
 resource "aws_subnet" "green_public_subnet" {
-    count = 2
+    count = length(var.public_cidrs)
     vpc_id = aws_vpc.green_vpc.id
     cidr_block = var.public_cidrs[count.index]
     map_public_ip_on_launch = true
-    availability_zone = data.aws_availability_zones.available.names[count.index]
+    availability_zone = local.azs[count.index]
     
     #Since they're human readable tags it might make more sense to finance, if everything starts at 1 instead of 0 
     tags = {
         Name = "green_public-${count.index + 1}"
     }
+}
+
+#All private subnets are going to fall back to the default route table by default, so we don't need to worry about creating explicit associations 
+resource "aws_subnet" "green_private_subnet" {
+    count = length(var.private_cidrs)
+    vpc_id = aws_vpc.green_vpc.id
+    cidr_block = var.private_cidrs[count.index]
+    map_public_ip_on_launch = false
+    availability_zone = local.azs[count.index]
+    
+    #Since they're human readable tags it might make more sense to finance, if everything starts at 1 instead of 0 
+    tags = {
+        Name = "green_private-${count.index + 1}"
+    }
+}
+
+#Route table association for public subnets
+resource "aws_route_table_association" "green_public_assoc" {
+    count = length(local.azs)
+    subnet_id = aws_subnet.green_public_subnet[count.index].id
+    route_table_id = aws_route_table.green_public_rt.id
 }
