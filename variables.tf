@@ -18,7 +18,7 @@ variable main_vol_size {
     default = 8
 }
 
-#Change this to add more EC2 instances
+#Change this to add more EC2 instances. There is a count in the instance resource.
 variable main_instance_count {
     type = number
     default = 1
