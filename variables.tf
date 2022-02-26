@@ -29,10 +29,12 @@ variable "main_instance_count" {
   default = 1
 }
 
+#The name of the key file is specified in terraform.tfvars
 variable "key_name" {
   type = string
 }
 
+#The path for the key is specified in terraform.tfvars
 variable "public_key_path" {
   type = string
 }
